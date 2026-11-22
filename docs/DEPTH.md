@@ -2,7 +2,7 @@
 
 - 规模：中型
 - 核心规则：按设备对营业窗口内的事件端点扫线，先裁决事件原因，再按审批覆盖重切停运片段。
-- 工作流：站点值班员对平夜班时长后，核对异常片段并保存接班证据。
+- 工作流：站点值班员对平夜班时长后，核对异常片段并保存接班证据，再逐单形成正式核销结论。
 
 ## 功能模块
 
@@ -14,7 +14,8 @@
 | M4 原因归属 | 查看交叠事件的归属行与候选行 | `GET /api/attribution/{sample}` | `app/modules/attribution/sweep.py` | `tests/test_attribution.py` |
 | M5 豁免计入 | 核对确实适用的审批及覆盖秒数 | `GET /api/exemptions/{sample}` | `app/modules/exemptions/register.py` `app/modules/exemptions/apply.py` | `tests/test_exemptions.py` |
 | M6 可用率核对 | 逐台核对四类秒数、差额和可用率 | `GET /api/reconcile/{sample}` | `app/modules/reconcile/balance.py` | `tests/test_reconcile.py` |
-| M7 班报归档 | 保存班报、查询证据、重跑和下载 | `POST /api/runs` | `app/modules/reports/store.py` `app/modules/reports/manifest.py` `app/modules/reports/evidence.py` | `tests/test_reports.py` |
+| M7 审批核销 | 跨相邻报码逐单形成已核销、未核销及理由 | `GET /api/writeoff/{sample}` `GET /api/writeoff/{sample}/export` | `app/modules/writeoff/conclude.py` | `tests/test_writeoff.py` `tests/test_writeoff_reports.py` |
+| M8 班报归档 | 保存班报、查询证据、重跑和下载 | `POST /api/runs` | `app/modules/reports/store.py` `app/modules/reports/manifest.py` `app/modules/reports/evidence.py` | `tests/test_reports.py` |
 
 ## 陷阱登记
 
@@ -29,6 +30,11 @@
 | TRAP-21 | `dirty/shifts.json` 第 5 行引用未登记设备 | 凭空增加营业窗口 | 隔离缺设备引用的班次 | `app/modules/schedules/calendar.py` | `tests/test_schedules.py::test_unknown_device_shift` |
 | TRAP-23 | `clean/shifts.json` 第 1 行结束时刻跨入次日 | 午夜后营业漏计 | 按次日端点展开，右端排除 | `app/modules/schedules/calendar.py` | `tests/test_schedules.py::test_midnight_shift` |
 | TRAP-25 | `dirty/shifts.json` 第 1、3 行交叠半小时 | 双计营业秒 | 保留原班次并计算并集 | `app/modules/schedules/calendar.py` | `tests/test_schedules.py::test_overlapping_shifts_are_unioned` |
+| TRAP-29 | `dirty/permits.json` 第 3 行 `POWER` 审批覆盖 22:00–23:15，其中 22:30–23:00 被 `SAFETY` 占用 | 整单作废漏掉真实施工，或把冲突时段算作核销 | 逐段裁决，只核销匹配获批原因的确认停运；高优原因占用时段列为未核销 | `app/modules/writeoff/conclude.py` | `tests/test_writeoff.py::test_higher_priority_reason_cannot_be_exempted` |
+| TRAP-30 | 单张 `SAFETY` 审批跨 `SAFETY`→`POWER`→`MECHANICAL` 三个相邻报码 | 只给整单一个结论或按整单退回 | 结论为部分核销，未核销理由带具体报码与时段 | `app/modules/writeoff/conclude.py` | `tests/test_writeoff.py::test_spanning_approval_partial_not_voided` |
+| TRAP-31 | `dirty/permits.json` 第 5 行 `pending`、第 6 行 `approval` 为空 | 按审批时段直接核销 | 逐单列为未核销，理由为未批准或缺审批凭据 | `app/modules/writeoff/conclude.py` | `tests/test_writeoff.py::test_pending_and_missing_approval_are_unwritten` |
+| TRAP-32 | 设备四类秒数出现差额 | 仍输出正式核销结论 | 相关时刻退回未核销，整体状态为暂缓 | `app/modules/writeoff/conclude.py` | `tests/test_writeoff.py::test_unbalanced_device_blocks_formal_conclusion` |
+| TRAP-33 | 归档前的旧班报没有 `writeoff` 证据 | 用现行规则重算补齐 | 读取、下载与重跑均返回冲突，保留原始未核销证据 | `app/modules/reports/routes.py` `app/modules/writeoff/routes.py` | `tests/test_writeoff_reports.py::test_legacy_report_without_writeoff_is_not_reinterpreted` |
 
 ## 联合回归
 
@@ -36,3 +42,5 @@
 - 已隔离、已采信和重传行数对平输入。见 `tests/test_events.py::test_event_counts_conserve`。
 - 每台设备的四类秒数对平营业并集，片段连续。见 `tests/test_reconcile.py::test_per_device_conservation_and_contiguity`。
 - 并发保存只写一份 SQLite 记录。见 `tests/test_reports.py::test_duplicate_posts_commit_once`。
+- 页面、样例下载与归档下载的逐单结论一致。见 `tests/test_writeoff_reports.py::test_archived_download_matches_page_and_archive`。
+- 重跑不新增也不改换核销结论，未核销证据随结果摘要一并留档。见 `tests/test_writeoff_reports.py::test_rerun_keeps_conclusion_and_evidence`。

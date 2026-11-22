@@ -12,11 +12,12 @@ from app.modules.exemptions.routes import router as exemptions
 from app.modules.reconcile.routes import router as reconcile
 from app.modules.reports.routes import router as reports
 from app.modules.schedules.routes import router as schedules
+from app.modules.writeoff.routes import router as writeoff
 from app.web import router as web
 
 app = FastAPI(title='扶梯停运统计簿')
 app.mount('/static', StaticFiles(directory=ROOT / 'app' / 'static'), name='static')
-for router in (schedules, events, clipping, attribution, exemptions, reconcile, reports, web):
+for router in (schedules, events, clipping, attribution, exemptions, reconcile, writeoff, reports, web):
     app.include_router(router)
 
 

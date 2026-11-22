@@ -2,6 +2,30 @@ from app.errors import BusinessError
 from app.times import local_time
 
 
+def _order_evidence(result, device, row):
+    orders = []
+    for order in result.get('writeoff', {}).get('orders', []):
+        if order['device'] != device or order['start'] is None or order['end'] is None:
+            continue
+        if not order['start'] < row['end'] or not row['start'] < order['end']:
+            continue
+        written = [item for item in order.get('written', [])
+                   if any(part['start'] < row['end'] and row['start'] < part['end']
+                          for part in item['segments'])]
+        missing = [item for item in order['reasons']
+                   if any(part['start'] < row['end'] and row['start'] < part['end']
+                          for part in item['segments'])]
+        if written:
+            status, code = 'written', written[0]['code']
+        elif missing:
+            status, code = 'unwritten', missing[0]['code']
+        else:
+            status, code = 'idle', 'NO_STOP'
+        orders.append({'line': order['line'], 'id': order['id'], 'conclusion': order['conclusion'],
+                       'slice': status, 'code': code, 'blocked': order['blocked']})
+    return orders
+
+
 def segment_evidence(result, device, start):
     row = next((item for item in result['segments'] if item['device'] == device and item['start'] == start), None)
     if row is None:
@@ -18,4 +42,5 @@ def segment_evidence(result, device, start):
     shifts = [shift for shift in result['schedules']['devices'][device]['shifts']
               if shift['start'] < row['end'] and row['start'] < shift['end']]
     return {'segment': row, 'start_local': local_time(row['start']), 'end_local': local_time(row['end']),
-            'events': events, 'retransmissions': retransmissions, 'permits': permits, 'shifts': shifts}
+            'events': events, 'retransmissions': retransmissions, 'permits': permits, 'shifts': shifts,
+            'writeoff': _order_evidence(result, device, row)}

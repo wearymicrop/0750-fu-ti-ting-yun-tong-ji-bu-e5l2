@@ -52,6 +52,9 @@ def detail(report_id: str):
 @router.post('/runs/{report_id}/rerun', summary='按留档输入重跑')
 def rerun(report_id: str):
     data, snapshot = fetch(report_id)
+    if 'writeoff' not in snapshot['result']:
+        # 旧班报缺少逐单核销证据；用现行规则补齐会改换结论且丢失原始未核销记录。
+        raise BusinessError('WRITEOFF_NOT_ARCHIVED', '该班报归档时没有核销结论，请勿重算覆盖', 409)
     fresh = build_report(snapshot['manifest']['source'], data)
     if fresh['id'] != snapshot['id'] or fresh['manifest']['digest'] != snapshot['manifest']['digest']:
         raise BusinessError('RERUN_MISMATCH', '重算结果与留档不一致', 409)

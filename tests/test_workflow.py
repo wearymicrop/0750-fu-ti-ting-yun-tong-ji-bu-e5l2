@@ -3,10 +3,11 @@ from app.times import instant
 
 def test_full_sample_workflow(client):
     home = client.get('/')
-    assert home.status_code == 200 and home.text.count('data-section=') == 7
+    assert home.status_code == 200 and home.text.count('data-section=') == 8
     assert client.get('/healthz').json()['service'] == 'lift-duties'
     for stage, field in [('schedules', 'devices'), ('events', 'counts'), ('clipping', 'pieces'),
-                         ('attribution', 'segments'), ('exemptions', 'permits'), ('reconcile', 'totals')]:
+                         ('attribution', 'segments'), ('exemptions', 'permits'), ('reconcile', 'totals'),
+                         ('writeoff', 'orders')]:
         response = client.get(f'/api/{stage}/dirty')
         assert response.status_code == 200 and field in response.json()
     instant_start = instant('2026-11-19T22:30:00+08:00')

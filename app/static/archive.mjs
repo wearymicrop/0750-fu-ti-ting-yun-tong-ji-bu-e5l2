@@ -13,10 +13,10 @@ export function drawArchived(report) {
 
 export async function drawArchive(open) {
   const {runs} = await request('/api/runs');
-  table($('archive-table'), [['班报'], ['来源'], ['对账状态']], runs.map(run => {
+  table($('archive-table'), [['班报'], ['来源'], ['对账状态'], ['核销状态']], runs.map(run => {
     const link = el('button', run.id.slice(0, 12), 'mono');
     link.type = 'button';
     link.addEventListener('click', () => open(run.id));
-    return [link, label(run.manifest.source), label(run.status)];
+    return [link, label(run.manifest.source), label(run.status), label(run.writeoff)];
   }));
 }

@@ -8,6 +8,7 @@ from app.modules.exemptions.apply import apply_permits
 from app.modules.exemptions.register import permit_register
 from app.modules.reconcile.balance import reconcile
 from app.modules.schedules.calendar import build_calendar
+from app.modules.writeoff.conclude import conclude_writeoff
 from app.samples import load_sample
 
 
@@ -34,9 +35,13 @@ def evaluate(data, stop=None):
     balance = reconcile(devices, final)
     if stop == 'reconcile':
         return balance
+    writeoff = conclude_writeoff(attributed, permits, isolated, window, balance)
+    if stop == 'writeoff':
+        return writeoff
     return {
         'window': asdict(window), 'schedules': calendar, 'events': ledger, 'clipping': cuts,
-        'attributed': attributed, 'permits': permits, 'permit_issues': isolated, 'segments': final, 'reconcile': balance,
+        'attributed': attributed, 'permits': permits, 'permit_issues': isolated, 'segments': final,
+        'reconcile': balance, 'writeoff': writeoff,
     }
 
 

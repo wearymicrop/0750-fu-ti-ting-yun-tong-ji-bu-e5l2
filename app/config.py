@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 LOCAL = timezone(timedelta(hours=8), 'Asia/Shanghai')
-RULE_VERSION = '2026.11.1'
+RULE_VERSION = '2026.11.2'
 
 
 def database_path():

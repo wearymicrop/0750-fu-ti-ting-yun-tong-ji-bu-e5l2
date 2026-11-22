@@ -8,6 +8,11 @@ const labels = {
   MISSING_APPROVAL: '缺审批凭据', OUTSIDE_OBSERVATION: '超出采信窗口', NON_SERVICE: '非营业时段',
   MATCHED: '时长已对平', MISSING_EVIDENCE: '时长对平 · 有缺证', NO_SERVICE: '无营业时段',
   UNBALANCED: '时长有差额', CONFIRMED: '已确认', approved: '已批准', pending: '待审批', denied: '未批准',
+  WRITTEN_OFF: '已核销', PARTIAL: '部分核销', NOT_WRITTEN_OFF: '未核销',
+  NOT_APPROVED: '审批未通过', REASON_MISMATCH: '审批原因不符', HIGHER_PRIORITY: '高优原因占用',
+  DEVICE_UNBALANCED: '设备时长未对平', OUTSIDE_WINDOW: '审批不在统计窗口', OUTSIDE_SERVICE: '审批不在营业时段',
+  FORMAL: '正式核销', BLOCKED: '未对平 · 暂缓', UNMATCHED: '秒数不符 · 暂缓',
+  WRITEOFF_NOT_ARCHIVED: '旧班报无核销留档',
   clean: '干净样例', dirty: '异常样例', custom: '本地班报',
 };
 export const label = value => labels[value] ?? value ?? '—';

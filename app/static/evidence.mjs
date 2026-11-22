@@ -12,6 +12,8 @@ function rows(title, data, toLine) {
   return [el('h3', title), list];
 }
 
+const slices = {written: '已核销', unwritten: '未核销', idle: '未计入停运'};
+
 export function drawEvidence(data) {
   const {segment} = data;
   const period = el('p', null, 'evidence-window');
@@ -25,6 +27,10 @@ export function drawEvidence(data) {
     ]),
     ...rows('重传行', data.retransmissions, item => [`第 ${item.line} 行 → 第 ${item.kept_line} 行`, item.raw.start]),
     ...rows('豁免凭据', data.permits, item => [`${item.id} · 第 ${item.line} 行`, item.raw.approval]),
+    ...rows('核销结论', data.writeoff ?? [], item => [
+      `${item.id} · 第 ${item.line} 行 · ${slices[item.slice]}${item.blocked ? ' · 设备未对平' : ''}`,
+      `${label(item.conclusion)} · ${label(item.code)}`,
+    ]),
     ...rows('营业班表', data.shifts, item => [`第 ${item.line} 行 · ${item.raw.day}`, `${item.raw.from} → ${item.raw.to}`]),
   );
 }

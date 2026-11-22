@@ -3,11 +3,17 @@ import {request} from './api.mjs';
 import {drawOverview} from './reconcile.mjs';
 import {drawEvidence} from './evidence.mjs';
 import {drawStage} from './stages.mjs';
+import {drawWriteoff} from './writeoff.mjs';
 import {drawArchive, drawArchived} from './archive.mjs';
 
 const links = [...document.querySelectorAll('[data-section]')];
 const state = {sample: 'dirty', result: null, report: null, evidenceKey: 0};
 const status = value => { $('status').textContent = value; };
+
+function writeoffSource() {
+  if (state.report && state.report.result === state.result) return `/api/runs/${state.report.id}/writeoff/export`;
+  return `/api/writeoff/${state.sample}/export`;
+}
 
 async function inspect(segment) {
   const key = ++state.evidenceKey;
@@ -31,13 +37,18 @@ function syncView() {
   $('page-title').textContent = active.textContent.trim();
   $('overview').hidden = section !== 'reconcile';
   $('archive').hidden = section !== 'runs';
-  $('stage').hidden = ['reconcile', 'runs'].includes(section);
+  $('writeoff').hidden = section !== 'writeoff';
+  $('stage').hidden = ['reconcile', 'runs', 'writeoff'].includes(section);
   if (section === 'runs') {
     drawArchived(state.report);
     drawArchive(openReport).catch(error => status(error.message));
   } else if (state.result) {
     if (section === 'reconcile') drawOverview(state.result, inspect);
-    else drawStage(section, state.result);
+    else if (section === 'writeoff') {
+      const available = drawWriteoff(state.result);
+      $('writeoff-download').hidden = !available;
+      if (available) $('writeoff-download').href = writeoffSource();
+    } else drawStage(section, state.result);
   }
 }
 

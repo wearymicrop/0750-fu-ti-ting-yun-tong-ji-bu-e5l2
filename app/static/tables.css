@@ -9,3 +9,9 @@ dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 7px 12px; }
 dt { color: var(--muted); }
 dd { margin: 0; overflow-wrap: anywhere; }
 #run-feedback { color: var(--accent); margin-top: 9px; }
+.writeoff-note { margin-bottom: var(--gap); padding: 11px var(--pad); border-left: 2px solid var(--accent); background: var(--panel); color: var(--muted); }
+.verdict { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; white-space: nowrap; background: var(--panel-alt); }
+.verdict.written { color: var(--accent-ink); background: var(--available); }
+.verdict.partial { background: var(--exempt); color: var(--ink); }
+.verdict.unwritten { background: var(--missing); color: var(--accent-ink); }
+.detail { border-bottom: 1px dotted var(--quiet); cursor: help; }

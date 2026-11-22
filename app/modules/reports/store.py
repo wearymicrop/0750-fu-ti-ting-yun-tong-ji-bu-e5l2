@@ -52,5 +52,6 @@ def history():
     for encoded, created in rows:
         report = json.loads(encoded)
         reports.append({'id': report['id'], 'manifest': report['manifest'], 'created_at': created,
-                        'status': report['result']['reconcile']['status']})
+                        'status': report['result']['reconcile']['status'],
+                        'writeoff': report['result'].get('writeoff', {}).get('summary', {}).get('status')})
     return reports
